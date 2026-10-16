@@ -1,0 +1,106 @@
+{
+  "name": "fast-rails-credentials",
+  "icon": "images/icon.png",
+  "displayName": "Fast Rails Credentials",
+  "description": "Quickly open Rails credentials",
+  "version": "0.1.0",
+  "publisher": "jvon1904",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jvon1904/fast-rails-credentials-vscode"
+  },
+  "homepage": "https://github.com/jvon1904/fast-rails-credentials-vscode#readme",
+  "bugs": {
+    "url": "https://github.com/jvon1904/fast-rails-credentials-vscode/issues"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "rails",
+    "ruby",
+    "credentials",
+    "encrypted credentials",
+    "master.key"
+  ],
+  "main": "./dist/extension.cjs",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [
+    "workspaceContains:**/config/credentials.yml.enc",
+    "workspaceContains:**/config/credentials/*.yml.enc",
+    "onFileSystem:fast-rails-credentials"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "fastRailsCredentials.openDecrypted",
+        "title": "Open Decrypted",
+        "category": "Fast Rails Credentials",
+        "icon": "$(unlock)"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "fastRailsCredentials.openDecrypted",
+          "when": "resourceScheme == file && resourcePath =~ /\\/config\\/(credentials\\/[^\\/]+|credentials)\\.yml\\.enc$/",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "fastRailsCredentials.openDecrypted",
+          "when": "resourceScheme == file && resourcePath =~ /\\/config\\/(credentials\\/[^\\/]+|credentials)\\.yml\\.enc$/",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "fastRailsCredentials.openDecrypted",
+          "when": "resourceScheme == file && resourcePath =~ /\\/config\\/(credentials\\/[^\\/]+|credentials)\\.yml\\.enc$/"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Fast Rails Credentials",
+      "properties": {
+        "fastRailsCredentials.openDecryptedOnClick": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open a Rails credentials file decrypted, in place of its encrypted contents."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.cjs",
+    "vscode:prepublish": "npm run build -- --minify",
+    "typecheck": "tsc",
+    "test": "node --test test/*.test.ts",
+    "test:vscode": "npm run build && esbuild test/integration/suite.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/integration/suite.cjs && node test/integration/run.ts",
+    "package": "vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/vscode": "1.90.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2",
+    "yaml": "2.9.1"
+  }
+}
