@@ -1,4 +1,5 @@
-# Fast Rails Credentials for VS Code
+
+# <img src="images/icon.png" width="32" alt="Fast Rails Credentials icon"> Fast Rails Credentials for VS Code
 
 Are your fingers tired of typing lengthy commands like this?
 
