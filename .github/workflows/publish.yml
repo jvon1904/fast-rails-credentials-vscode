@@ -1,0 +1,95 @@
+# Publishes a version to the VS Code Marketplace when its tag is pushed.
+#
+# To release:
+#   1. npm version patch --no-git-tag-version   (or minor/major), and add the version to CHANGELOG.md.
+#   2. Commit, then tag and push:  git tag -a v0.1.1 -m "Fast Rails Credentials 0.1.1"
+#                                  git push origin main v0.1.1
+#
+# The test job runs every test, including the Rails compatibility and VS Code integration tests, and packages the
+# .vsix. The publish job uploads that same .vsix with Marketplace Trusted Publishing: GitHub's OIDC token is exchanged
+# for a short-lived Marketplace credential, so no token is stored in this repository. That needs a Trusted Publishing
+# policy on the jvon1904 publisher for this repository, this workflow file (publish.yml) and the production
+# environment.
+#
+# Running the workflow by hand (Actions > Publish > Run workflow) tests and packages without publishing.
+
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check the tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$GITHUB_REF_NAME" != "$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match the package.json version, $version."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+
+      - uses: ruby/setup-ruby@e1bd6146574da5e0795075b5319b300edb30c5b0 # v1.333.0
+        with:
+          ruby-version: '4.0'
+
+      # The Rails compatibility tests skip themselves when ActiveSupport is missing, so check it loads first.
+      - name: Install ActiveSupport
+        run: |
+          gem install activesupport --version '~> 8.1' --no-document
+          ruby -ractive_support -ractive_support/encrypted_configuration -e 'puts "ActiveSupport #{ActiveSupport.version}"'
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: xvfb-run -a npm run test:vscode
+      - run: npm run package
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: vsix
+          path: '*.vsix'
+          if-no-files-found: error
+
+  publish:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26
+          cache: npm
+
+      # Only vsce is needed here. No install scripts run while this job can request an OIDC token.
+      - run: npm ci --ignore-scripts
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: vsix
+
+      - run: npx vsce publish --oidc --packagePath *.vsix

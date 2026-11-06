@@ -12,3 +12,8 @@ The first release.
 - Shows the new contents when the encrypted file changes on disk.
 - `fastRailsCredentials.openDecryptedOnClick` turns off opening files decrypted on click;
   **Fast Rails Credentials: Open Decrypted** still opens them.
+
+## 0.1.1
+
+- Add image to Readme
+- Add GH workflow

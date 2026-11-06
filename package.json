@@ -3,7 +3,7 @@
   "icon": "images/icon.png",
   "displayName": "Fast Rails Credentials",
   "description": "Quickly open Rails credentials",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "jvon1904",
   "license": "MIT",
   "repository": {
@@ -98,7 +98,7 @@
     "@types/node": "26.6.5",
     "@types/vscode": "1.90.0",
     "@vscode/test-electron": "3.1.0",
-    "@vscode/vsce": "4.0.0",
+    "@vscode/vsce": "4.1.0",
     "esbuild": "0.28.2",
     "typescript": "7.0.2",
     "yaml": "2.9.1"
